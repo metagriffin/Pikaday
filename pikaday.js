@@ -410,7 +410,7 @@
     },
 
     renderTimePicker = function(num_options, selected_val, role, display_func, opts) {
-        var to_return = '<td><select class="pika-select pika-select-'+role+'">';
+        var to_return = '<td class="pika-time-item pika-time-'+role+'"><select class="pika-select pika-select-'+role+'">';
         if ( selected_val === null )
             to_return += '<option value="" class="placeholder" disabled="disabled" selected="selected">'
                 + opts.i18n[role + 'Placeholder'] + '</option>';
