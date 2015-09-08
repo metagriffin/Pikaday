@@ -50,6 +50,44 @@ var picker = new Pikaday({
         <input type="text" id="datepicker-24sec">
     </div>
 
+    <div class="example">
+        <label for="datepicker-defaultTime-3pm">Default to 3 PM:</label>
+        <pre class="script">
+var picker = new Pikaday({
+    field               : document.getElementById('datepicker-defaultTime-3pm'),
+    defaultTime         : '15:00:00'
+});</pre>
+        <input type="text" id="datepicker-defaultTime-3pm">
+    </div>
+
+    <div class="example">
+        <label for="datepicker-defaultTime-null">Require explicit time, including seconds:</label>
+        <pre class="script">
+var picker = new Pikaday({
+    field               : document.getElementById('datepicker-defaultTime-null'),
+    defaultTime         : null,
+    showSeconds         : true
+});</pre>
+        <input type="text" id="datepicker-defaultTime-null">
+    </div>
+
+    <div class="example">
+        <label for="datepicker-steps">Specify time increments, seconds, and placeholders:</label>
+        <pre class="script">
+var picker = new Pikaday({
+    field               : document.getElementById('datepicker-steps'),
+    showSeconds         : true,
+    defaultTime         : null,
+    hourStep            : 2,
+    minuteStep          : 5,
+    secondStep          : 15,
+    i18n                : {
+      minutePlaceholder   : 'Minute'          // the default is "Min"
+    }
+});</pre>
+        <input type="text" id="datepicker-steps">
+    </div>
+
     <h2>What is this?</h2>
 
     <p>Since version 1.0 Pikaday is a stable and battle tested date-picker. Feel free to use it however you like but please report any bugs or feature requests to the <a href="https://github.com/dbushell/Pikaday/issues">GitHub issue tracker</a>, thanks!</p>
