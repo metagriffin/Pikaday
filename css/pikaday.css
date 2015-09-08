@@ -212,36 +212,38 @@ http://nicolasgallagher.com/micro-clearfix-hack/
  * "select" styling shamelessly scrubbed from:
  *   http://bavotasan.com/2011/style-select-box-using-only-css/
  */
-.pika-time td {
+.pika-time td.pika-time-item {
+    position: relative;
     padding: 0;
     overflow: hidden;
-    position: relative;
-}
-
-.pika-time td select {
-    z-index: 1;
-    margin-right: -.75em;
-    padding: 0.25em 1.5em 0.25em 0.5em;
-    border: 0;
-    color: #666666;
-    background: transparent;
-    -webkit-appearance: none;
+    vertical-align: middle;
 }
 
 .pika-time td.pika-time-item::before {
-    content: "\a0";
+    content: " ";
     z-index: -10;
-    display: inline-block;
     position: absolute;
+    top: 0;
     right: 0;
-    top: 0.3em;
-    width: 30px;
-    height: 20px;
+    height: 100%;
+    width: 20px;
     opacity: 0.5;
     background: transparent url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAUCAYAAACaq43EAAAAOElEQVRIx+3TMQoAMAgEwfs/CPvjWOUBaXLNDliLeiaSPpok57FoNKcxOY2107g5jcDRSDs+vXQtAmkxoqVLdJ0AAAAASUVORK5CYII=") no-repeat center center;
-    background-size: 75%;
+    background-size: 25px;
 }
 
 .pika-time td.pika-time-item:hover::before {
     opacity: 1;
+}
+
+.pika-time td.pika-time-item select {
+    position: relative;
+    right: -10px;
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+    padding-right: 25px;
+    color: #666666;
+    background: transparent;
+    -webkit-appearance: none;
 }
