@@ -97,6 +97,11 @@
         el.className = trim((' ' + el.className + ' ').replace(' ' + cn + ' ', ' '));
     },
 
+    isNone = function(obj)
+    {
+        return obj === undefined || obj === null;
+    },
+
     isArray = function(obj)
     {
         return (/Array/).test(Object.prototype.toString.call(obj));
@@ -478,20 +483,8 @@
                             target.getAttribute('data-pika-month'),
                             target.getAttribute('data-pika-day')
                         );
-                    // Preserve time selection when date changed
-                    if (self._d && opts.showTime) {
-                        newDate.setHours(self._d.getHours());
-                        newDate.setMinutes(self._d.getMinutes());
-                    }
-                    self.setDate(newDate);
-                    if (opts.bound) {
-                        sto(function() {
-                            self.hide();
-                            if (opts.field) {
-                                opts.field.blur();
-                            }
-                        }, 100);
-                    }
+                    self.setDateOnly(newDate);
+                    self._c = !! self._dtmp;
                     return;
                 }
                 else if (hasClass(target, 'pika-prev')) {
@@ -528,12 +521,18 @@
             }
             else if (hasClass(target, 'pika-select-hour')) {
                 self.setTime(target.value);
+                if ( self._d )
+                    self.hide(true);
             }
             else if (hasClass(target, 'pika-select-minute')) {
                 self.setTime(null, target.value);
+                if ( self._d )
+                    self.hide(true);
             }
             else if (hasClass(target, 'pika-select-second')) {
                 self.setTime(null, null, target.value);
+                if ( self._d )
+                    self.hide(true);
             }
         };
 
@@ -551,9 +550,7 @@
             else {
                 date = new Date(Date.parse(opts.field.value));
             }
-            if (isDate(date)) {
-                self.setDate(date);
-            }
+            self.setDate(isDate(date) ? date : null);
             if (!self._v) {
                 self.show();
             }
@@ -580,11 +577,8 @@
             }
             while ((pEl = pEl.parentNode));
 
-            if (!self._c) {
-                self._b = sto(function() {
-                    self.hide();
-                }, 50);
-            }
+            if (!self._c)
+                self.hide(true);
             self._c = false;
         };
 
@@ -613,6 +607,16 @@
             if (self._v && target !== opts.trigger && pEl !== opts.trigger) {
                 self.hide();
             }
+        };
+
+        self._getTimeItem = function(role)
+        {
+            if ( ! self._o.showSeconds && role == 'second' )
+                return 0;
+            var ret = self.el.getElementsByClassName('pika-select-' + role).item(0);
+            if ( ! ret || ret.value === "" )
+                return null;
+            return parseInt(ret.value);
         };
 
         self.el = document.createElement('div');
@@ -787,33 +791,22 @@
          * Currently defaulting to setting date to today if not set
          */
         setTime: function(hours, minutes, seconds) {
-            if (!this._d) {
-                var that = this;
-                var selval = function(class_) {
-                    var ret = that.el.getElementsByClassName(class_).item(0);
-                    if ( !! ret )
-                        return ret.value;
-                    return null;
-                };
-                this._d = new Date();
-                // default the time components to the h/m/s selects' values
-                // (in case they were set via options.defaultTime)
-                this._d.setHours(
-                    selval('pika-select-hour') || 0,
-                    selval('pika-select-minute') || 0,
-                    selval('pika-select-second') || 0,
-                    0);
+            var h = isNone(hours)   ? this._getTimeItem('hour')   : parseInt(hours);
+            var m = isNone(minutes) ? this._getTimeItem('minute') : parseInt(minutes);
+            var s = isNone(seconds) ? this._getTimeItem('second') : parseInt(seconds);
+
+            if ( this._d ) {
+                this._d.setHours(h || 0, m || 0, s || 0, 0);
+                this.setDate(this._d);
+                return;
             }
-            if (hours) {
-                this._d.setHours(hours);
-            }
-            if (minutes) {
-                this._d.setMinutes(minutes);
-            }
-            if (seconds) {
-                this._d.setSeconds(seconds);
-            }
-            this.setDate(this._d);
+
+            if ( h === null || m === null || s === null || ! this._dtmp )
+                return;
+
+            var date = new Date(this._dtmp);
+            date.setHours(h, m, s, 0);
+            return this.setDate(date);
         },
 
         /**
@@ -821,6 +814,7 @@
          */
         setDate: function(date, preventOnSelect)
         {
+            this._dtmp = null;
             if (!date) {
                 this._d = null;
 
@@ -864,6 +858,40 @@
             if (!preventOnSelect && typeof this._o.onSelect === 'function') {
                 this._o.onSelect.call(this, this.getDate());
             }
+        },
+
+        /**
+         * set the current date selection, without effecting the time
+         * selection. if no time selection has been made, then actually
+         * setting values is postponed until time selection is avalaible.
+         */
+        setDateOnly: function(date) {
+
+            this._dtmp = null;
+
+            if ( ! this._o.showTime )
+              return this.setDate(date);
+
+            if ( this._d ) {
+                var d = new Date(this._d);
+                d.setFullYear(date.getFullYear());
+                d.setMonth(date.getMonth());
+                d.setDate(date.getDate());
+                return this.setDate(d);
+            }
+
+            var h = this._getTimeItem('hour');
+            var m = this._getTimeItem('minute');
+            var s = this._getTimeItem('second');
+
+            if ( h !== null && m !== null && s !== null ) {
+                var d = new Date(date);
+                d.setHours(h, m, s, 0);
+                return this.setDate(d);
+            }
+
+            this._dtmp = new Date(date);
+            return this.draw();
         },
 
         /**
@@ -1119,8 +1147,9 @@
 
             for (var i = 0, r = 0; i < cells; i++)
             {
+                var seldate = this._d || this._dtmp;
                 var day = new Date(year, month, 1 + (i - before)),
-                    isSelected = isDate(this._d) ? compareDates(day, this._d) : false,
+                    isSelected = isDate(seldate) ? compareDates(day, seldate) : false,
                     isToday = compareDates(day, now),
                     isEmpty = i < before || i >= (days + before),
                     isDisabled = (minDate_date && day < minDate_date) ||
@@ -1163,8 +1192,15 @@
             }
         },
 
-        hide: function()
+        hide: function(deferred)
         {
+            if ( deferred ) {
+                var self = this;
+                sto(function() {
+                    self.hide();
+                }, 50);
+                return;
+            }
             var v = this._v;
             if (v !== false) {
                 if (this._o.bound) {
