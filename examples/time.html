@@ -88,6 +88,18 @@ var picker = new Pikaday({
         <input type="text" id="datepicker-steps">
     </div>
 
+    <div class="example">
+        <label for="datepicker-auto">Auto-open the next select list (Chrome-only for now):</label>
+        <pre class="script">
+var picker = new Pikaday({
+    field               : document.getElementById('datepicker-auto'),
+    defaultTime         : null,
+    minuteStep          : 5,
+    autoNextInput       : true
+});</pre>
+        <input type="text" id="datepicker-auto">
+    </div>
+
     <h2>What is this?</h2>
 
     <p>Since version 1.0 Pikaday is a stable and battle tested date-picker. Feel free to use it however you like but please report any bugs or feature requests to the <a href="https://github.com/dbushell/Pikaday/issues">GitHub issue tracker</a>, thanks!</p>
