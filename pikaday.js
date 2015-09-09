@@ -254,6 +254,12 @@
         secondStep: 1,
         defaultTime: '00:00:00',
 
+        // when a date or time component is selected, this specifies
+        // whether the next unset time select component is auto-opened
+        // (note this only works on chrome for now and has no effect
+        // on other platforms).
+        autoNextInput: false,
+
         // when numberOfMonths is used, this will help you to choose where the main calendar will be (default `left`, can be set to `right`)
         // only used for the first display or when a selected date is not visible
         mainCalendar: 'left',
@@ -484,7 +490,7 @@
                             target.getAttribute('data-pika-day')
                         );
                     self.setDateOnly(newDate);
-                    self._c = !! self._dtmp;
+                    self._doNextInput();
                     return;
                 }
                 else if (hasClass(target, 'pika-prev')) {
@@ -521,19 +527,53 @@
             }
             else if (hasClass(target, 'pika-select-hour')) {
                 self.setTime(target.value);
-                if ( self._d )
-                    self.hide(true);
+                self._doNextInput();
             }
             else if (hasClass(target, 'pika-select-minute')) {
                 self.setTime(null, target.value);
-                if ( self._d )
-                    self.hide(true);
+                self._doNextInput();
             }
             else if (hasClass(target, 'pika-select-second')) {
                 self.setTime(null, null, target.value);
-                if ( self._d )
-                    self.hide(true);
+                self._doNextInput();
             }
+        };
+
+        self._doNextInput = function() {
+            if ( ! opts.autoNextInput || ! opts.showTime ) {
+                if ( self._d )
+                    return self.hide(true);
+                self._c = !! self._dtmp;
+                return;
+            }
+            if ( ! self._d && ! self._dtmp ) {
+                // date is needed
+                self._c = true;
+                return;
+            }
+            if ( self._getTimeItem('hour') === null )
+                return self._openSelect('hour', true);
+            if ( self._getTimeItem('minute') === null )
+                return self._openSelect('minute', true);
+            if ( self._getTimeItem('second') === null )
+                return self._openSelect('second', true);
+            self.hide(true);
+        };
+
+        self._openSelect = function(role, deferred)
+        {
+            self._c = true;
+            if ( deferred ) {
+              return sto(function() {
+                  self._openSelect(role, false);
+              }, 50);
+            }
+            var el = self.el.getElementsByClassName('pika-select-' + role).item(0);
+            if ( ! el )
+                return;
+            if ( opts.doOpenSelect )
+                return opts.doOpenSelect(el);
+            el.dispatchEvent(new MouseEvent('mousedown'));
         };
 
         self._onInputChange = function(e)
